@@ -21,8 +21,9 @@ type Channel struct {
 }
 
 type Line struct {
-	Text string    `json:"text"`
-	Time time.Time `json:"time"`
+	Time  time.Time `json:"time"`
+	Text  string    `json:"text,omitempty"`
+	Event string    `json:"event,omitempty"`
 }
 
 func NewChannel(name string, filter *regexp.Regexp) *Channel {
@@ -40,6 +41,15 @@ func (c *Channel) IngestLine(text string) error {
 		return nil
 	}
 	line := Line{Text: text, Time: time.Now()}
+	if err := c.AppendLine(line); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Channel) AppendLine(line Line) error {
+	// Maybe add a lock?
 	c.LineHistory.Value = line
 	c.LineHistory = c.LineHistory.Next()
 	if c.Output != nil {
@@ -77,7 +87,17 @@ func (c *Channel) SetFilter(filter string) error {
 		return fmt.Errorf("could not compile filter regex: %w", err)
 	}
 
+	oldFilter := ""
+	if c.Filter != nil {
+		oldFilter = c.Filter.String()
+	}
 	c.Filter = regexp
+
+	c.AppendLine(Line{
+		Time:  time.Now(),
+		Event: fmt.Sprintf("changed filter: %s -> %s", oldFilter, regexp.String()),
+	})
+
 	return nil
 }
 

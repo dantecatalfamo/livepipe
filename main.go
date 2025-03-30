@@ -15,7 +15,10 @@ func main() {
 	defaultAddress := fmt.Sprintf("%s:%d", DefaultHost, DefaultPort)
 	scanner := bufio.NewScanner(os.Stdin)
 
-	filter := os.Args[1]
+	filter := ""
+	if len(os.Args) > 1 {
+		filter = os.Args[1]
+	}
 	manager, err := NewChannelManager(filter)
 	if err != nil {
 		panic(err)

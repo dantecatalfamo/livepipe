@@ -11,9 +11,12 @@ async function listChannels() {
 }
 
 async function createChannel(name, filter) {
+    const formData = new FormData()
+    formData.append("name", name)
+    formData.append("filter", filter)
     const resp = await fetch(createChannelPath, {
         method: "POST",
-        body: JSON.stringify({ name, filter })
+        body: formData
     })
     return await resp.json()
 }
@@ -33,7 +36,7 @@ async function setChannelFilter(channel, filter) {
     return await resp.json()
 }
 
-async function setChannelFilter(channel, name) {
+async function setChannelName(channel, name) {
     const formData = new FormData()
     formData.append("name", name)
     const resp = await fetch(updateChannelPath(channel), {
@@ -45,6 +48,16 @@ async function setChannelFilter(channel, name) {
 
 
 async function main() {
+    const newChannelEl = document.getElementById("new-channel-form")
+    const newChannelNameEl = document.getElementById("new-channel-name")
+    const newChannelFilterEl = document.getElementById("new-channel-filter")
+    newChannelEl.addEventListener("submit", async event => {
+        event.preventDefault()
+        const filter = newChannelFilterEl.value
+        const name = newChannelNameEl.value
+        const newChannel = await createChannel(name, filter)
+        channelsEl.appendChild(await channelBox(newChannel))
+    })
     const channelsEl = document.getElementById("channels")
     const channels = await listChannels()
     for (channel of channels.channels) {
@@ -68,10 +81,18 @@ async function channelBox(channel) {
     nameEl.innerText = channel.name
     summaryEl.appendChild(nameEl)
 
-    const filterEl = document.createElement("input")
-    filterEl.classList.add("filter")
-    filterEl.value = channel.filter
-    summaryEl.appendChild(filterEl)
+    if (channel.id != "stdin") {
+        const filterEl = document.createElement("input")
+        filterEl.classList.add("filter")
+        filterEl.value = channel.filter
+        filterEl.placeholder = "filter"
+        filterEl.addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                setChannelFilter(channel.id, filterEl.value)
+            }
+        })
+        summaryEl.appendChild(filterEl)
+    }
 
     const linesEl = document.createElement("div")
     linesEl.classList.add("lines")
@@ -106,7 +127,12 @@ function elementFromLine(line) {
     const lineEl = document.createElement("div")
     const textEl = document.createElement("span")
     lineEl.classList.add("line")
-    textEl.innerText = line.text
+    if (line.event) {
+        lineEl.classList.add("event")
+        textEl.innerText = line.event
+    } else {
+        textEl.innerText = line.text || ""
+    }
     textEl.title = line.time
     lineEl.appendChild(textEl)
 

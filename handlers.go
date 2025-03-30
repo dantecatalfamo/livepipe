@@ -105,7 +105,10 @@ func updateChannel(manager *ChannelManager) http.HandlerFunc {
 			return
 		}
 
-		r.ParseForm()
+		if err := r.ParseMultipartForm(2 * 1024); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		if name, ok := r.Form["name"]; ok {
 			channel.SetName(name[0])
@@ -116,9 +119,8 @@ func updateChannel(manager *ChannelManager) http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
+			w.Write([]byte("filter updated"))
 		}
-
-		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
