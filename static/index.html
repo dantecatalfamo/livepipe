@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Livepipe</title>
+    <link rel="stylesheet" href="style.css"/>
+  </head>
+  <body>
+    <div class="new-channel">
+      <form action="/api/channels" method="post">
+        <div id="new-channel">
+          <label for="name">Name:</label>
+          <input type="text" id="new-channel-name" name="name" />
+          <label for="filter">Filter:</label>
+          <input type="text" id="new-channel-filter" name="filter" />
+          <input type="submit" value="Create"/>
+        </div>
+      </form>
+    </div>
+    <div id="channels">
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

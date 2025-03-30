@@ -1,0 +1,36 @@
+html {
+    font-family: sans-serif;
+}
+
+.new-channel {
+    border-bottom: 1px black solid;
+    padding: 6px;
+    margin-bottom: 6px;
+}
+
+.channel {
+    border: 1px solid black;
+    border-radius: 3px;
+    padding: 4px;
+    margin: 6px;
+}
+
+.lines {
+    border-top: 1px solid black;
+    margin-top: 4px;
+    font-family: monospace, monospace;
+    max-height: 30rem;
+    overflow: scroll;
+}
+
+.lines * {
+    overflow-anchor: none;
+}
+
+.anchor {
+    overflow-anchor: auto;
+    height: 3px;
+}
+
+.line {
+}
