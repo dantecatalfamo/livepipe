@@ -11,12 +11,23 @@ body {
     border-bottom: 1px black solid;
     padding: 6px;
     margin-bottom: 6px;
-    background-color: #CFFFCF;;
+    background-color: #CFFFCF;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1.5em;
 }
 
 #new-channel-form {
     margin-left: 6px;
     display: inline-block;
+}
+
+#channels {
+    margin-top: 3em;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
 .channel {
