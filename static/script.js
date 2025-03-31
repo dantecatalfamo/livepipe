@@ -105,6 +105,10 @@ async function channelBox(channel) {
     linesEl.classList.add("lines")
     detailsEl.appendChild(linesEl)
 
+    detailsEl.addEventListener("toggle", () => {
+        linesEl.scrollTop = linesEl.scrollHeight
+    })
+
     const anchorEl = document.createElement("div")
     anchorEl.classList.add("anchor")
     linesEl.appendChild(anchorEl)
@@ -116,6 +120,7 @@ async function channelBox(channel) {
         linesEl.insertBefore(lineEl, anchorEl)
     }
 
+    linesEl.scrollTop = linesEl.scrollHeight
     // https://css-tricks.com/books/greatest-css-tricks/pin-scrolling-to-bottom/
     linesEl.scroll(0, 1);
 
