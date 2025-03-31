@@ -33,7 +33,10 @@ async function setChannelFilter(channel, filter) {
         method: "PATCH",
         body: formData,
     })
-    return await resp.json()
+    if (!resp.ok) {
+        const body = await resp.body.getReader().read()
+        return String.fromCharCode.apply(null, body.value)
+    }
 }
 
 async function setChannelName(channel, name) {
@@ -83,15 +86,19 @@ async function channelBox(channel) {
 
     if (channel.id != "stdin") {
         const filterEl = document.createElement("input")
+        summaryEl.appendChild(filterEl)
+        const filterErrorEl = document.createElement("span")
+        filterErrorEl.classList.add("filter-error")
+        summaryEl.appendChild(filterErrorEl)
+
         filterEl.classList.add("filter")
         filterEl.value = channel.filter
         filterEl.placeholder = "filter"
-        filterEl.addEventListener("keydown", event => {
+        filterEl.addEventListener("keydown", async event => {
             if (event.key === "Enter") {
-                setChannelFilter(channel.id, filterEl.value)
+                filterErrorEl.innerText = await setChannelFilter(channel.id, filterEl.value) || ""
             }
         })
-        summaryEl.appendChild(filterEl)
     }
 
     const linesEl = document.createElement("div")

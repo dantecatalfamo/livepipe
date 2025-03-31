@@ -52,7 +52,8 @@ func (c *Channel) AppendLine(line Line) error {
 	// Maybe add a lock?
 	c.LineHistory.Value = line
 	c.LineHistory = c.LineHistory.Next()
-	if c.Output != nil {
+	// Don't output a blank line when it's an event
+	if c.Output != nil && line.Event == "" {
 		if _, err := fmt.Fprintln(c.Output, line.Text); err != nil {
 			return fmt.Errorf("channel %s: failed to write: %w", c.Name, err)
 		}

@@ -15,15 +15,20 @@ html {
     margin: 6px;
 }
 
-.name {
-    margin-right: 10px;
+.filter {
+    margin-left: 10px;
+    margin-right: 10px;;
+}
+
+.filter-error {
+    color: darkred;
 }
 
 .lines {
     border-top: 1px solid black;
     margin-top: 4px;
     font-family: monospace, monospace;
-    max-height: 30rem;
+    height: 30rem;
     white-space: pre;
     overflow: scroll;
 }

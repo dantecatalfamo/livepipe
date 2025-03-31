@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"regexp"
+	"regexp/syntax"
 
 	"github.com/gorilla/websocket"
 )
@@ -116,6 +118,11 @@ func updateChannel(manager *ChannelManager) http.HandlerFunc {
 
 		if filter, ok := r.Form["filter"]; ok {
 			if err := channel.SetFilter(filter[0]); err != nil {
+				// Don't return wrapping error if it's from the regex parser
+				regexErr := &syntax.Error{}
+				if errors.As(err, &regexErr) {
+					err = regexErr
+				}
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
