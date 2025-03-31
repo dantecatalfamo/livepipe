@@ -1,10 +1,12 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"regexp"
 	"regexp/syntax"
@@ -12,8 +14,15 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+//go:embed static
+var staticFiles embed.FS
+
 func BuildRoutes(mux *http.ServeMux, manager *ChannelManager) {
-	mux.Handle("GET /", http.FileServer(http.Dir("static")))
+	staticDir, err := fs.Sub(staticFiles, "static")
+	if err != nil {
+		panic(err)
+	}
+	mux.Handle("GET /", http.FileServer(http.FS(staticDir)))
 	mux.Handle("GET /api/channels", listChannels(manager))
 	mux.Handle("POST /api/channels", createChannel(manager))
 	mux.Handle("GET /api/channels/{channelID}/history", channelHistory(manager))
