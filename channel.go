@@ -92,6 +92,11 @@ func (c *Channel) SetFilter(filter string) error {
 	if c.Filter != nil {
 		oldFilter = c.Filter.String()
 	}
+	if oldFilter == regexp.String() {
+		// No change
+		return nil
+	}
+
 	c.Filter = regexp
 
 	c.AppendLine(Line{

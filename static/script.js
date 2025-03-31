@@ -59,6 +59,8 @@ async function main() {
         const filter = newChannelFilterEl.value
         const name = newChannelNameEl.value
         const newChannel = await createChannel(name, filter)
+        newChannelNameEl.value = ""
+        newChannelFilterEl.value = ""
         channelsEl.appendChild(await channelBox(newChannel))
     })
     const channelsEl = document.getElementById("channels")
