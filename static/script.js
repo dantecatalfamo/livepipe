@@ -98,7 +98,7 @@ async function channelBox(channel) {
         const filterEl = document.createElement("input")
         summaryEl.appendChild(filterEl)
         const filterErrorEl = document.createElement("span")
-        filterErrorEl.classList.add("filter-error")
+        filterErrorEl.classList.add("error")
         summaryEl.appendChild(filterErrorEl)
 
         filterEl.classList.add("filter")
@@ -163,6 +163,7 @@ async function channelBox(channel) {
 
     socket.addEventListener("close", event => {
         console.error(`socket ${channel.name} close`, event.reason)
+        nameEl.classList.add("error")
         linesEl.insertBefore(elementFromLine({event: "socket closed"}), anchorEl)
     })
 
