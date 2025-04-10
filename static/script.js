@@ -134,6 +134,16 @@ async function channelBox(channel) {
         linesEl.insertBefore(lineEl, anchorEl)
     })
 
+    socket.addEventListener("error", event => {
+        console.error(`socket ${channel.name} error`, event)
+        socket.close("socket error")
+    })
+
+    socket.addEventListener("close", event => {
+        console.error(`socket ${channel.name} close`, event.reason)
+        linesEl.insertBefore(elementFromLine({event: "socket closed"}), anchorEl)
+    })
+
     return channelEl
 }
 
