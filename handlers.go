@@ -94,7 +94,10 @@ func createChannel(manager *ChannelManager) http.HandlerFunc {
 		}
 
 		channel := NewChannel(formName, filter)
-		manager.AddChannel(channel)
+		if err := manager.AddChannel(channel); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		resp := channelResponse{
 			Name:           channel.Name,

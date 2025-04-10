@@ -35,7 +35,7 @@ func main() {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		if err := manager.IngestLine(line); err != nil {
+		if err := manager.IngestString(line); err != nil {
 			panic(err)
 		}
 	}

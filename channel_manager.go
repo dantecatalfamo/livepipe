@@ -29,9 +29,9 @@ func NewChannelManager(filter string) (*ChannelManager, error) {
 	}, nil
 }
 
-func (manager *ChannelManager) IngestLine(line string) error {
+func (manager *ChannelManager) IngestString(line string) error {
 	for _, channel := range manager.Channels {
-		channel.IngestLine(line)
+		channel.IngestString(line)
 	}
 
 	return nil
@@ -47,8 +47,19 @@ func (manager *ChannelManager) ChannelByID(id string) (*Channel, error) {
 	return nil, errors.New("could not find channel")
 }
 
-func (manager *ChannelManager) AddChannel(channel *Channel) {
+func (manager *ChannelManager) AddChannel(channel *Channel) error {
+	stdin, err := manager.ChannelByID("stdin")
+	if err != nil {
+		return fmt.Errorf("no stdin channel: %w", err)
+	}
+
+	for _, line := range stdin.History() {
+		channel.IngestLine(line)
+	}
+
 	manager.Channels = append(manager.Channels, channel)
+
+	return nil
 }
 
 func (manager *ChannelManager) RemoveChannel(id string) {

@@ -36,11 +36,23 @@ func NewChannel(name string, filter *regexp.Regexp) *Channel {
 	}
 }
 
-func (c *Channel) IngestLine(text string) error {
+func (c *Channel) IngestString(text string) error {
 	if c.Filter != nil && !c.Filter.Match([]byte(text)) {
 		return nil
 	}
 	line := Line{Text: text, Time: time.Now()}
+	if err := c.AppendLine(line); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Channel) IngestLine(line Line) error {
+	if c.Filter != nil && !c.Filter.Match([]byte(line.Text)) {
+		return nil
+	}
+
 	if err := c.AppendLine(line); err != nil {
 		return err
 	}
