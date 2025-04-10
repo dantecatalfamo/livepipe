@@ -179,7 +179,7 @@ function elementFromLine(line) {
     } else {
         textEl.innerText = line.text || ""
     }
-    textEl.title = line.time
+    textEl.title = new Date(line.time)
     lineEl.appendChild(textEl)
 
     return lineEl
