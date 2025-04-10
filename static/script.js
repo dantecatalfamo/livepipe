@@ -3,6 +3,7 @@ const listChannelsPath = "/api/channels"
 const createChannelPath = "/api/channels"
 const getChannelHistoryPath = channel => `/api/channels/${channel}/history`
 const updateChannelPath = channel => `/api/channels/${channel}`
+const deleteChannelPath = channel => `/api/channels/${channel}`
 const getChannelLivePath = channel => `/api/channels/${channel}/live`
 
 async function listChannels() {
@@ -47,6 +48,13 @@ async function setChannelName(channel, name) {
         body: formData,
     })
     return await resp.json()
+}
+
+async function deleteChannel(channel) {
+    const resp = await fetch(deleteChannelPath(channel), {
+        method: "DELETE"
+    })
+    return resp.ok
 }
 
 
@@ -101,6 +109,19 @@ async function channelBox(channel) {
                 filterErrorEl.innerText = await setChannelFilter(channel.id, filterEl.value) || ""
             }
         })
+
+        if (channel.id != "stdout") {
+            const deleteEl = document.createElement("button")
+            deleteEl.classList.add("delete")
+            deleteEl.innerText = "delete"
+            deleteEl.type = "button"
+            deleteEl.addEventListener("click", async () => {
+                if (await deleteChannel(channel.id)) {
+                    channelEl.remove()
+                }
+            })
+            summaryEl.appendChild(deleteEl)
+        }
     }
 
     const linesEl = document.createElement("div")

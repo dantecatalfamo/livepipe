@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 )
 
 type ChannelManager struct {
@@ -48,4 +49,19 @@ func (manager *ChannelManager) ChannelByID(id string) (*Channel, error) {
 
 func (manager *ChannelManager) AddChannel(channel *Channel) {
 	manager.Channels = append(manager.Channels, channel)
+}
+
+func (manager *ChannelManager) RemoveChannel(id string) {
+	manager.Channels = slices.DeleteFunc(manager.Channels, func(c *Channel) bool {
+		if c.ID == id {
+			for broadcast := range c.Broadcasts {
+				c.RemoveBroadcast(broadcast)
+				close(broadcast)
+			}
+
+			return true
+		}
+
+		return false
+	})
 }

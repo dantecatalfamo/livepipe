@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"regexp"
 	"regexp/syntax"
+	"slices"
 
 	"github.com/gorilla/websocket"
 )
@@ -27,6 +28,7 @@ func BuildRoutes(mux *http.ServeMux, manager *ChannelManager) {
 	mux.Handle("POST /api/channels", createChannel(manager))
 	mux.Handle("GET /api/channels/{channelID}/history", channelHistory(manager))
 	mux.Handle("PATCH /api/channels/{channelID}", updateChannel(manager))
+	mux.Handle("DELETE /api/channels/{channelID}", channelDelete(manager))
 	mux.Handle("POST /api/validate-filter", http.HandlerFunc(validateFilter))
 	mux.Handle("GET /api/channels/{channelID}/live", channelLive(manager))
 }
@@ -110,6 +112,11 @@ func createChannel(manager *ChannelManager) http.HandlerFunc {
 func updateChannel(manager *ChannelManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("channelID")
+		if id == "stdin" {
+			http.Error(w, "cannot modidy stdin", http.StatusBadRequest)
+			return
+		}
+
 		channel, err := manager.ChannelByID(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
@@ -181,5 +188,19 @@ func channelLive(manager *ChannelManager) http.HandlerFunc {
 		for line := range broadcast {
 			ws.WriteJSON(line)
 		}
+	}
+
+}
+
+func channelDelete(manager *ChannelManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("channelID")
+
+		if slices.Contains([]string{"stdin", "stdout"}, id) {
+			http.Error(w, "cannot delete channel "+id, http.StatusBadRequest)
+			return
+		}
+
+		manager.RemoveChannel(id)
 	}
 }
