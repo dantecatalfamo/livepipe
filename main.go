@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,13 +13,14 @@ const DefaultHost = "localhost"
 const DefaultPort = 5055
 
 func main() {
-	defaultAddress := fmt.Sprintf("%s:%d", DefaultHost, DefaultPort)
+	port := flag.Int("port", DefaultPort, "port to listen on")
+	host := flag.String("host", DefaultHost, "hostname to bind to")
+	flag.Parse()
+
+	defaultAddress := fmt.Sprintf("%s:%d", *host, *port)
 	scanner := bufio.NewScanner(os.Stdin)
 
-	filter := ""
-	if len(os.Args) > 1 {
-		filter = os.Args[1]
-	}
+	filter := flag.Arg(0)
 	manager, err := NewChannelManager(filter)
 	if err != nil {
 		panic(err)
