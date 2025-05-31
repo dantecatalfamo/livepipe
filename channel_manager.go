@@ -12,7 +12,7 @@ type ChannelManager struct {
 }
 
 func NewChannelManager(filter string) (*ChannelManager, error) {
-	stdoutChannel := NewChannel("stdout", nil)
+	stdoutChannel := NewChannel("stdout", nil, "")
 	stdoutChannel.Output = os.Stdout
 	stdoutChannel.OutputFilename = "stdout"
 	stdoutChannel.ID = "stdout"
@@ -21,7 +21,7 @@ func NewChannelManager(filter string) (*ChannelManager, error) {
 		return nil, fmt.Errorf("setting initial filter: %w", err)
 	}
 
-	inputChannel := NewChannel("stdin", nil)
+	inputChannel := NewChannel("stdin", nil, "")
 	inputChannel.ID = "stdin"
 
 	return &ChannelManager{

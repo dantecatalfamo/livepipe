@@ -46,7 +46,11 @@ summary {
 
 .filter {
     margin-left: 10px;
-    margin-right: 10px;;
+    margin-right: 10px;
+}
+
+.replace {
+    margin-right: 10px;
 }
 
 .error {

@@ -14,6 +14,7 @@ type Channel struct {
 	Name           string
 	ID             string
 	Filter         *regexp.Regexp
+	Replace        string
 	LineHistory    *ring.Ring
 	Output         io.WriteCloser
 	OutputFilename string
@@ -26,11 +27,12 @@ type Line struct {
 	Event string    `json:"event,omitempty"`
 }
 
-func NewChannel(name string, filter *regexp.Regexp) *Channel {
+func NewChannel(name string, filter *regexp.Regexp, replace string) *Channel {
 	return &Channel{
 		Name:        name,
 		ID:          generateID(),
 		Filter:      filter,
+		Replace:     replace,
 		LineHistory: ring.New(DefaultLineHistory),
 		Broadcasts:  make(map[chan Line]struct{}),
 	}
@@ -39,6 +41,9 @@ func NewChannel(name string, filter *regexp.Regexp) *Channel {
 func (c *Channel) IngestString(text string) error {
 	if c.Filter != nil && !c.Filter.Match([]byte(text)) {
 		return nil
+	}
+	if c.Replace != "" {
+		text = c.Filter.ReplaceAllString(text, c.Replace)
 	}
 	line := Line{Text: text, Time: time.Now()}
 	if err := c.AppendLine(line); err != nil {
@@ -117,6 +122,22 @@ func (c *Channel) SetFilter(filter string) error {
 	})
 
 	return nil
+}
+
+func (c *Channel) SetReplace(replace string) bool {
+	if c.Replace == replace {
+		return false
+	}
+
+	oldReplace := c.Replace
+	c.Replace = replace
+
+	c.AppendLine(Line{
+		Time:  time.Now(),
+		Event: fmt.Sprintf("changed replace: %s -> %s", oldReplace, replace),
+	})
+
+	return true
 }
 
 func (c *Channel) SetName(name string) {

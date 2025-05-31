@@ -11,10 +11,11 @@ async function listChannels() {
     return await resp.json()
 }
 
-async function createChannel(name, filter) {
+async function createChannel(name, filter, replace) {
     const formData = new FormData()
     formData.append("name", name)
     formData.append("filter", filter)
+    formData.append("replace", replace)
     const resp = await fetch(createChannelPath, {
         method: "POST",
         body: formData
@@ -40,6 +41,15 @@ async function setChannelFilter(channel, filter) {
     }
 }
 
+async function setChannelReplace(channel, replace) {
+    const formData = new FormData()
+    formData.append("replace", replace)
+    await fetch(updateChannelPath(channel), {
+        method: "PATCH",
+        body: formData,
+    })
+}
+
 async function setChannelName(channel, name) {
     const formData = new FormData()
     formData.append("name", name)
@@ -62,13 +72,16 @@ async function main() {
     const newChannelEl = document.getElementById("new-channel-form")
     const newChannelNameEl = document.getElementById("new-channel-name")
     const newChannelFilterEl = document.getElementById("new-channel-filter")
+    const newChannelReplaceEl = document.getElementById("new-channel-replace")
     newChannelEl.addEventListener("submit", async event => {
         event.preventDefault()
         const filter = newChannelFilterEl.value
         const name = newChannelNameEl.value
-        const newChannel = await createChannel(name, filter)
+        const replace = newChannelReplaceEl.value
+        const newChannel = await createChannel(name, filter, replace)
         newChannelNameEl.value = ""
         newChannelFilterEl.value = ""
+        newChannelReplaceEl.value = ""
         channelsEl.appendChild(await channelBox(newChannel))
     })
     const channelsEl = document.getElementById("channels")
@@ -99,7 +112,6 @@ async function channelBox(channel) {
         summaryEl.appendChild(filterEl)
         const filterErrorEl = document.createElement("span")
         filterErrorEl.classList.add("error")
-        summaryEl.appendChild(filterErrorEl)
 
         filterEl.classList.add("filter")
         filterEl.value = channel.filter
@@ -109,6 +121,19 @@ async function channelBox(channel) {
                 filterErrorEl.innerText = await setChannelFilter(channel.id, filterEl.value) || ""
             }
         })
+
+        const replaceEl = document.createElement("input")
+        summaryEl.appendChild(replaceEl)
+        replaceEl.classList.add("replace")
+        replaceEl.value = channel.replace
+        replaceEl.placeholder = "replace"
+        replaceEl.addEventListener("keydown", async event => {
+            if (event.key == "Enter") {
+                await setChannelReplace(channel.id, replaceEl.value)
+            }
+        })
+
+        summaryEl.appendChild(filterErrorEl)
 
         if (channel.id != "stdout") {
             const deleteEl = document.createElement("button")

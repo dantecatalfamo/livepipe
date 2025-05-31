@@ -57,6 +57,7 @@ type channelResponse struct {
 	ID             string `json:"id"`
 	OutputFilename string `json:"outputFilename"`
 	Filter         string `json:"filter"`
+	Replace        string `json:"replace"`
 }
 
 func listChannels(manager *ChannelManager) http.HandlerFunc {
@@ -73,6 +74,7 @@ func listChannels(manager *ChannelManager) http.HandlerFunc {
 				ID:             channel.ID,
 				OutputFilename: channel.OutputFilename,
 				Filter:         filter,
+				Replace:        channel.Replace,
 			})
 		}
 
@@ -86,6 +88,7 @@ func createChannel(manager *ChannelManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		formName := r.FormValue("name")
 		formFilter := r.FormValue("filter")
+		formReplace := r.FormValue("replace")
 
 		filter, err := regexp.Compile(formFilter)
 		if err != nil {
@@ -93,7 +96,7 @@ func createChannel(manager *ChannelManager) http.HandlerFunc {
 			return
 		}
 
-		channel := NewChannel(formName, filter)
+		channel := NewChannel(formName, filter, formReplace)
 		if err := manager.AddChannel(channel); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -104,6 +107,7 @@ func createChannel(manager *ChannelManager) http.HandlerFunc {
 			ID:             channel.ID,
 			OutputFilename: channel.OutputFilename,
 			Filter:         filter.String(),
+			Replace:        formReplace,
 		}
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -135,6 +139,12 @@ func updateChannel(manager *ChannelManager) http.HandlerFunc {
 			channel.SetName(name[0])
 		}
 
+		if replace, ok := r.Form["replace"]; ok {
+			if channel.SetReplace(replace[0]) {
+				w.Write([]byte("replace updated\r\n"))
+			}
+		}
+
 		if filter, ok := r.Form["filter"]; ok {
 			if err := channel.SetFilter(filter[0]); err != nil {
 				// Don't return wrapping error if it's from the regex parser
@@ -145,7 +155,7 @@ func updateChannel(manager *ChannelManager) http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			w.Write([]byte("filter updated"))
+			w.Write([]byte("filter updated\r\n"))
 		}
 	}
 }
