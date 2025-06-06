@@ -3,6 +3,7 @@
   <head>
     <title>Livepipe</title>
     <link rel="stylesheet" href="style.css"/>
+    <script src="script.js" defer></script>
   </head>
   <body>
     <div class="new-channel">
@@ -18,6 +19,19 @@
     </div>
     <div id="channels">
     </div>
-    <script src="script.js"></script>
+    <template id="channel-template">
+      <div class="channel">
+        <details open="">
+          <summary>
+            <span class="name"></span>
+            <input class="filter" placeholder="filter">
+            <input class="replace" placeholder="replace">
+            <span class="error"></span>
+            <button class="delete" type="button">delete</button>
+          </summary>
+          <div class="lines"><div class="anchor"></div></div>
+        </details>
+      </div>
+    </template>
   </body>
 </html>

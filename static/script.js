@@ -92,74 +92,53 @@ async function main() {
 }
 
 async function channelBox(channel) {
-    const channelEl = document.createElement("div")
-    channelEl.classList.add("channel")
+    const channelEl = document.getElementById("channel-template").content.cloneNode(true)
+    const detailsEl = channelEl.querySelector("details")
+    const summaryEl = channelEl.querySelector("summary")
+    const nameEl = channelEl.querySelector(".name")
+    const filterEl = channelEl.querySelector(".filter")
+    const filterErrorEl = channelEl.querySelector(".error")
+    const replaceEl = channelEl.querySelector(".replace")
+    const deleteEl = channelEl.querySelector(".delete")
+    const linesEl = channelEl.querySelector(".lines")
+    const anchorEl = channelEl.querySelector(".anchor")
 
-    const detailsEl = document.createElement("details")
-    detailsEl.open = true
-    channelEl.appendChild(detailsEl)
-
-    const summaryEl = document.createElement("summary")
-    detailsEl.appendChild(summaryEl)
-
-    const nameEl = document.createElement("span")
-    nameEl.classList.add("name")
     nameEl.innerText = channel.name
-    summaryEl.appendChild(nameEl)
 
-    if (channel.id != "stdin") {
-        const filterEl = document.createElement("input")
-        summaryEl.appendChild(filterEl)
-        const filterErrorEl = document.createElement("span")
-        filterErrorEl.classList.add("error")
-
-        filterEl.classList.add("filter")
-        filterEl.value = channel.filter
-        filterEl.placeholder = "filter"
-        filterEl.addEventListener("keydown", async event => {
-            if (event.key === "Enter") {
-                filterErrorEl.innerText = await setChannelFilter(channel.id, filterEl.value) || ""
-            }
-        })
-
-        const replaceEl = document.createElement("input")
-        summaryEl.appendChild(replaceEl)
-        replaceEl.classList.add("replace")
-        replaceEl.value = channel.replace
-        replaceEl.placeholder = "replace"
-        replaceEl.addEventListener("keydown", async event => {
-            if (event.key == "Enter") {
-                await setChannelReplace(channel.id, replaceEl.value)
-            }
-        })
-
-        summaryEl.appendChild(filterErrorEl)
-
-        if (channel.id != "stdout") {
-            const deleteEl = document.createElement("button")
-            deleteEl.classList.add("delete")
-            deleteEl.innerText = "delete"
-            deleteEl.type = "button"
-            deleteEl.addEventListener("click", async () => {
-                if (await deleteChannel(channel.id)) {
-                    channelEl.remove()
-                }
-            })
-            summaryEl.appendChild(deleteEl)
+    filterEl.value = channel.filter
+    filterEl.addEventListener("keydown", async event => {
+        if (event.key === "Enter") {
+            filterErrorEl.innerText = await setChannelFilter(channel.id, filterEl.value) || ""
         }
+    })
+
+    replaceEl.value = channel.replace
+    replaceEl.addEventListener("keydown", async event => {
+        if (event.key == "Enter") {
+            await setChannelReplace(channel.id, replaceEl.value)
+        }
+    })
+
+    if (channel.id != "stdout") {
+        deleteEl.addEventListener("click", async () => {
+            if (await deleteChannel(channel.id)) {
+                channelEl.remove()
+            }
+        })
     }
 
-    const linesEl = document.createElement("div")
-    linesEl.classList.add("lines")
-    detailsEl.appendChild(linesEl)
+    if (channel.id == "stdin") {
+        filterEl.remove()
+        replaceEl.remove()
+    }
+
+    if (channel.id == "stdin" || channel.id == "stdout") {
+        deleteEl.remove()
+    }
 
     detailsEl.addEventListener("toggle", () => {
         linesEl.scrollTop = linesEl.scrollHeight
     })
-
-    const anchorEl = document.createElement("div")
-    anchorEl.classList.add("anchor")
-    linesEl.appendChild(anchorEl)
 
     const channelHistory = await getChannelHistory(channel.id)
 
