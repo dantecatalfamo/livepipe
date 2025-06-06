@@ -64,12 +64,13 @@ summary {
 .lines {
     border-top: 1px solid black;
     font-family: monospace, monospace;
-    height: 30rem;
+    height: 20rem;
     white-space: pre;
     overflow: scroll;
     padding: 4px;
     font-size: 0.8em;
     background-color: #fff;
+    resize: vertical;
 }
 
 .lines * {
