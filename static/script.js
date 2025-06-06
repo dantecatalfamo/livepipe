@@ -92,9 +92,8 @@ async function main() {
 }
 
 async function channelBox(channel) {
-    const channelEl = document.getElementById("channel-template").content.cloneNode(true)
+    const channelEl = document.getElementById("channel-template").content.cloneNode(true).querySelector(".channel")
     const detailsEl = channelEl.querySelector("details")
-    const summaryEl = channelEl.querySelector("summary")
     const nameEl = channelEl.querySelector(".name")
     const filterEl = channelEl.querySelector(".filter")
     const filterErrorEl = channelEl.querySelector(".error")
@@ -119,13 +118,11 @@ async function channelBox(channel) {
         }
     })
 
-    if (channel.id != "stdout") {
-        deleteEl.addEventListener("click", async () => {
-            if (await deleteChannel(channel.id)) {
-                channelEl.remove()
-            }
-        })
-    }
+    deleteEl.addEventListener("click", async () => {
+        if (await deleteChannel(channel.id)) {
+            channelEl.remove()
+        }
+    })
 
     if (channel.id == "stdin") {
         filterEl.remove()
