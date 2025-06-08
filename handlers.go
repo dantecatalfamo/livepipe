@@ -18,12 +18,18 @@ import (
 //go:embed static
 var staticFiles embed.FS
 
-func BuildRoutes(mux *http.ServeMux, manager *ChannelManager) {
-	staticDir, err := fs.Sub(staticFiles, "static")
-	if err != nil {
-		panic(err)
+func BuildRoutes(mux *http.ServeMux, manager *ChannelManager, devMode bool) {
+	var staticHandler http.Handler
+	if devMode {
+		staticHandler = http.FileServer(http.Dir("static"))
+	} else {
+		staticDir, err := fs.Sub(staticFiles, "static")
+		if err != nil {
+			panic(err)
+		}
+		staticHandler = http.FileServer(http.FS(staticDir))
 	}
-	mux.Handle("GET /", http.FileServer(http.FS(staticDir)))
+	mux.Handle("GET /", staticHandler)
 	mux.Handle("GET /api/channels", listChannels(manager))
 	mux.Handle("POST /api/channels", createChannel(manager))
 	mux.Handle("GET /api/channels/{channelID}/history", channelHistory(manager))

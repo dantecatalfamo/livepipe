@@ -15,6 +15,7 @@ const DefaultPort = 5055
 func main() {
 	port := flag.Int("port", DefaultPort, "port to listen on")
 	host := flag.String("host", DefaultHost, "hostname to bind to")
+	devMode := flag.Bool("dev", false, "enable developer mode")
 	flag.Parse()
 
 	defaultAddress := fmt.Sprintf("%s:%d", *host, *port)
@@ -27,7 +28,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	BuildRoutes(mux, manager)
+	BuildRoutes(mux, manager, *devMode)
 
 	go func() {
 		panic(http.ListenAndServe(defaultAddress, mux))
