@@ -33,6 +33,7 @@ func BuildRoutes(mux *http.ServeMux, manager *ChannelManager, devMode bool) {
 	mux.Handle("GET /api/channels", listChannels(manager))
 	mux.Handle("POST /api/channels", createChannel(manager))
 	mux.Handle("GET /api/channels/{channelID}/history", channelHistory(manager))
+	mux.Handle("GET /api/channels/{channelID}/plain", channelPlain(manager))
 	mux.Handle("PATCH /api/channels/{channelID}", updateChannel(manager))
 	mux.Handle("DELETE /api/channels/{channelID}", channelDelete(manager))
 	mux.Handle("POST /api/validate-filter", http.HandlerFunc(validateFilter))
@@ -50,6 +51,30 @@ func channelHistory(manager *ChannelManager) http.HandlerFunc {
 
 		if err := json.NewEncoder(w).Encode(channel.History()); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func channelPlain(manager *ChannelManager) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("channelID")
+		channel, err := manager.ChannelByID(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+
+		w.Header().Add("Content-Type", "text/plain")
+		w.Header().Add("Content-Disposition", fmt.Sprintf("filename=%q", channel.Name+".txt"))
+
+		for _, line := range channel.History() {
+			if line.Event != "" {
+				continue
+			}
+			if _, err := fmt.Fprintln(w, line.Text); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 }

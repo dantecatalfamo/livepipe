@@ -57,8 +57,12 @@ summary {
     color: darkred;
 }
 
-.delete {
+.download {
     margin-left: auto;
+}
+
+.delete {
+    margin-left: 10px;
 }
 
 .lines {

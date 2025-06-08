@@ -2,6 +2,7 @@ const validateFilterPath = "/api/validate-filter"
 const listChannelsPath = "/api/channels"
 const createChannelPath = "/api/channels"
 const getChannelHistoryPath = channel => `/api/channels/${channel}/history`
+const getChannelPlainPath = channel => `/api/channels/${channel}/plain`
 const updateChannelPath = channel => `/api/channels/${channel}`
 const deleteChannelPath = channel => `/api/channels/${channel}`
 const getChannelLivePath = channel => `/api/channels/${channel}/live`
@@ -98,6 +99,7 @@ async function channelBox(channel) {
     const filterEl = channelEl.querySelector(".filter")
     const filterErrorEl = channelEl.querySelector(".error")
     const replaceEl = channelEl.querySelector(".replace")
+    const downloadEl = channelEl.querySelector(".download")
     const deleteEl = channelEl.querySelector(".delete")
     const linesEl = channelEl.querySelector(".lines")
     const anchorEl = channelEl.querySelector(".anchor")
@@ -117,6 +119,8 @@ async function channelBox(channel) {
             await setChannelReplace(channel.id, replaceEl.value)
         }
     })
+
+    downloadEl.href = getChannelPlainPath(channel.id)
 
     deleteEl.addEventListener("click", async () => {
         if (await deleteChannel(channel.id)) {
