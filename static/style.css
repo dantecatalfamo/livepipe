@@ -44,25 +44,33 @@ summary {
     background-color:  #D5FFFF;;
 }
 
+.name {
+    margin-right: 8px;
+}
+
+.inputs {
+    display: inline-block;
+}
+
 .filter {
-    margin-left: 10px;
-    margin-right: 10px;
 }
 
 .replace {
-    margin-right: 10px;
 }
 
 .error {
     color: darkred;
 }
 
-.download {
+.buttons {
+    display: inline-block;
     margin-left: auto;
 }
 
+.download {
+}
+
 .delete {
-    margin-left: 10px;
 }
 
 .lines {
