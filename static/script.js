@@ -1,3 +1,5 @@
+const MAX_LINES = 1_000
+
 const validateFilterPath = "/api/validate-filter"
 const listChannelsPath = "/api/channels"
 const createChannelPath = "/api/channels"
@@ -157,6 +159,13 @@ async function channelBox(channel) {
     socket.addEventListener("message", event => {
         const json = JSON.parse(event.data)
         const lineEl = elementFromLine(json)
+        if (linesEl.childElementCount > MAX_LINES) {
+            const removeCount = linesEl.childElementCount-MAX_LINES;
+            while (removeCount > 0) {
+                linesEl.firstChild.remove()
+                removeCount--
+            }
+        }
         linesEl.insertBefore(lineEl, anchorEl)
     })
 
