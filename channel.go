@@ -79,6 +79,7 @@ func (c *Channel) AppendLine(line Line) error {
 		select {
 		case b <- line:
 		default:
+			// If the channel is not consuming and the buffer is full, discard line instead of blocking
 		}
 	}
 
