@@ -70,6 +70,18 @@ async function deleteChannel(channel) {
     return resp.ok
 }
 
+async function waitForReload() {
+    const interval = 5_000;
+    setInterval(async () => {
+        try {
+            const resp = await fetch("/", { cache: "no-store" })
+            resp.ok && window.location.reload()
+        } catch (e) {
+            console.log("server down, retrying in", interval, "ms")
+        }
+    }, interval);
+}
+
 
 async function main() {
     const newChannelEl = document.getElementById("new-channel-form")
@@ -168,6 +180,10 @@ async function channelBox(channel) {
         }
         linesEl.insertBefore(lineEl, anchorEl)
     })
+
+    if (channel.id == "stdin") {
+        socket.onclose = waitForReload
+    }
 
     socket.addEventListener("error", event => {
         console.error(`socket ${channel.name} error`, event)
