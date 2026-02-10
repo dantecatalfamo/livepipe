@@ -14,7 +14,8 @@ type Channel struct {
 	Name           string
 	ID             string
 	Filter         *regexp.Regexp
-	Replace        string
+	SubMatch       *regexp.Regexp
+	SubReplace     string
 	LineHistory    *ring.Ring
 	Output         io.WriteCloser
 	OutputFilename string
@@ -27,23 +28,24 @@ type Line struct {
 	Event string    `json:"event,omitempty"`
 }
 
-func NewChannel(name string, filter *regexp.Regexp, replace string) *Channel {
+func NewChannel(name string, filter *regexp.Regexp, subMatch *regexp.Regexp, subReplace string) *Channel {
 	return &Channel{
 		Name:        name,
 		ID:          generateID(),
 		Filter:      filter,
-		Replace:     replace,
+		SubMatch:    subMatch,
+		SubReplace:  subReplace,
 		LineHistory: ring.New(DefaultLineHistory),
 		Broadcasts:  make(map[chan Line]struct{}),
 	}
 }
 
 func (c *Channel) IngestString(text string) error {
-	if c.Filter != nil && !c.Filter.Match([]byte(text)) {
+	if c.Filter != nil && !c.Filter.MatchString(text) {
 		return nil
 	}
-	if c.Replace != "" {
-		text = c.Filter.ReplaceAllString(text, c.Replace)
+	if c.SubMatch != nil {
+		text = c.SubMatch.ReplaceAllString(text, c.SubReplace)
 	}
 	line := Line{Text: text, Time: time.Now()}
 	if err := c.AppendLine(line); err != nil {
@@ -54,10 +56,12 @@ func (c *Channel) IngestString(text string) error {
 }
 
 func (c *Channel) IngestLine(line Line) error {
-	if c.Filter != nil && !c.Filter.Match([]byte(line.Text)) {
+	if c.Filter != nil && !c.Filter.MatchString(line.Text) {
 		return nil
 	}
-
+	if c.SubMatch != nil {
+		line.Text = c.SubMatch.ReplaceAllString(line.Text, c.SubReplace)
+	}
 	if err := c.AppendLine(line); err != nil {
 		return err
 	}
@@ -101,41 +105,85 @@ func (c *Channel) History() []Line {
 }
 
 func (c *Channel) SetFilter(filter string) error {
-	regexp, err := regexp.Compile(filter)
-	if err != nil {
-		return fmt.Errorf("could not compile filter regex: %w", err)
-	}
+	var regex *regexp.Regexp
+	var err error
 
 	oldFilter := ""
-	if c.Filter != nil {
-		oldFilter = c.Filter.String()
-	}
-	if oldFilter == regexp.String() {
-		// No change
-		return nil
+	newFilter := ""
+
+	if filter != "" {
+		regex, err = regexp.Compile(filter)
+		if err != nil {
+			return fmt.Errorf("could not compile filter regex: %w", err)
+		}
+		newFilter = regex.String()
+
+		if c.Filter != nil {
+			oldFilter = c.Filter.String()
+		}
+
+		if oldFilter == newFilter {
+			// No change
+			return nil
+		}
 	}
 
-	c.Filter = regexp
+	c.Filter = regex
 
 	c.AppendLine(Line{
 		Time:  time.Now(),
-		Event: fmt.Sprintf("changed filter: %s -> %s", oldFilter, regexp.String()),
+		Event: fmt.Sprintf("changed filter: %s -> %s", oldFilter, newFilter),
 	})
 
 	return nil
 }
 
-func (c *Channel) SetReplace(replace string) bool {
-	if c.Replace == replace {
-		return false
+func (c *Channel) SetSubMatch(subMatch string) error {
+	var regex *regexp.Regexp
+	var err error
+
+	oldSubMatch := ""
+	newSubMatch := ""
+
+	// If it's an empty string, set the match to nil to prevent matching on everything
+	if subMatch != "" {
+		regex, err = regexp.Compile(subMatch)
+		if err != nil {
+			return fmt.Errorf("could not compile filter regex: %w", err)
+		}
+		newSubMatch = regex.String()
+
+		if c.SubMatch != nil {
+			oldSubMatch = c.SubMatch.String()
+		}
+
+		if oldSubMatch == newSubMatch {
+			// No change
+			return nil
+		}
 	}
 
-	oldReplace := c.Replace
-	c.Replace = replace
+	c.SubMatch = regex
 
 	c.AppendLine(Line{
 		Time:  time.Now(),
-		Event: fmt.Sprintf("changed replace: %s -> %s", oldReplace, replace),
+		Event: fmt.Sprintf("changed sub match: %s -> %s", oldSubMatch, newSubMatch),
+	})
+
+	return nil
+}
+
+func (c *Channel) SetSubReplace(subReplace string) bool {
+	if c.SubReplace == subReplace {
+		return false
+	}
+
+	oldReplace := c.SubReplace
+	c.SubReplace = subReplace
+
+	c.AppendLine(Line{
+		Time:  time.Now(),
+		Event: fmt.Sprintf("changed replace: %s -> %s", oldReplace, subReplace),
 	})
 
 	return true

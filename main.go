@@ -42,7 +42,7 @@ func main() {
 		if len(strs) > 1 {
 			filter = strs[1]
 		}
-		channel := NewChannel(name, nil, "")
+		channel := NewChannel(name, nil, nil, "")
 		if err := channel.SetFilter(filter); err != nil {
 			fmt.Printf("failed to parse arg filter %q: %s\n", filter, err)
 			os.Exit(1)

@@ -88,7 +88,8 @@ type channelResponse struct {
 	ID             string `json:"id"`
 	OutputFilename string `json:"outputFilename"`
 	Filter         string `json:"filter"`
-	Replace        string `json:"replace"`
+	SubMatch       string `json:"subMatch"`
+	SubReplace     string `json:"subReplace"`
 }
 
 func listChannels(manager *ChannelManager) http.HandlerFunc {
@@ -100,12 +101,17 @@ func listChannels(manager *ChannelManager) http.HandlerFunc {
 			if channel.Filter != nil {
 				filter = channel.Filter.String()
 			}
+			subMatch := ""
+			if channel.SubMatch != nil {
+				subMatch = channel.SubMatch.String()
+			}
 			channels = append(channels, channelResponse{
 				Name:           channel.Name,
 				ID:             channel.ID,
 				OutputFilename: channel.OutputFilename,
 				Filter:         filter,
-				Replace:        channel.Replace,
+				SubMatch:       subMatch,
+				SubReplace:     channel.SubReplace,
 			})
 		}
 
@@ -119,7 +125,8 @@ func createChannel(manager *ChannelManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		formName := r.FormValue("name")
 		formFilter := r.FormValue("filter")
-		formReplace := r.FormValue("replace")
+		formSubMatch := r.FormValue("subMatch")
+		formSubReplace := r.FormValue("subReplace")
 
 		filter, err := regexp.Compile(formFilter)
 		if err != nil {
@@ -127,7 +134,19 @@ func createChannel(manager *ChannelManager) http.HandlerFunc {
 			return
 		}
 
-		channel := NewChannel(formName, filter, formReplace)
+		var subMatch *regexp.Regexp
+		var subMatchStr string
+		if formSubMatch != "" {
+			var err error
+			subMatch, err = regexp.Compile(formSubMatch)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			subMatchStr = subMatch.String()
+		}
+
+		channel := NewChannel(formName, filter, subMatch, formSubReplace)
 		if err := manager.AddChannel(channel); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -138,7 +157,8 @@ func createChannel(manager *ChannelManager) http.HandlerFunc {
 			ID:             channel.ID,
 			OutputFilename: channel.OutputFilename,
 			Filter:         filter.String(),
-			Replace:        formReplace,
+			SubMatch:       subMatchStr,
+			SubReplace:     formSubReplace,
 		}
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -170,9 +190,22 @@ func updateChannel(manager *ChannelManager) http.HandlerFunc {
 			channel.SetName(name[0])
 		}
 
-		if replace, ok := r.Form["replace"]; ok {
-			if channel.SetReplace(replace[0]) {
-				w.Write([]byte("replace updated\r\n"))
+		if subMatch, ok := r.Form["subMatch"]; ok {
+			if err := channel.SetSubMatch(subMatch[0]); err != nil {
+				// Don't return wrapping error if it's from the regex parser
+				regexErr := &syntax.Error{}
+				if errors.As(err, &regexErr) {
+					err = regexErr
+				}
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			w.Write([]byte("subMatch updated\r\n"))
+		}
+
+		if replace, ok := r.Form["subReplace"]; ok {
+			if channel.SetSubReplace(replace[0]) {
+				w.Write([]byte("subReplace updated\r\n"))
 			}
 		}
 

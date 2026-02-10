@@ -14,11 +14,12 @@ async function listChannels() {
     return await resp.json()
 }
 
-async function createChannel(name, filter, replace) {
+async function createChannel(name, filter, subMatch, subReplace) {
     const formData = new FormData()
     formData.append("name", name)
     formData.append("filter", filter)
-    formData.append("replace", replace)
+    formData.append("subMatch", subMatch)
+    formData.append("subReplace", subReplace)
     const resp = await fetch(createChannelPath, {
         method: "POST",
         body: formData
@@ -44,9 +45,19 @@ async function setChannelFilter(channel, filter) {
     }
 }
 
-async function setChannelReplace(channel, replace) {
+async function setChannelSubMatch(channel, subMatch) {
     const formData = new FormData()
-    formData.append("replace", replace)
+    formData.append("subMatch", subMatch)
+    await fetch(updateChannelPath(channel), {
+        method: "PATCH",
+        body: formData,
+    })
+}
+
+
+async function setChannelSubReplace(channel, subReplace) {
+    const formData = new FormData()
+    formData.append("subReplace", subReplace)
     await fetch(updateChannelPath(channel), {
         method: "PATCH",
         body: formData,
@@ -87,16 +98,19 @@ async function main() {
     const newChannelEl = document.getElementById("new-channel-form")
     const newChannelNameEl = document.getElementById("new-channel-name")
     const newChannelFilterEl = document.getElementById("new-channel-filter")
-    const newChannelReplaceEl = document.getElementById("new-channel-replace")
+    const newChannelSubMatchEl = document.getElementById("new-channel-sub-match")
+    const newChannelSubReplaceEl = document.getElementById("new-channel-sub-replace")
     newChannelEl.addEventListener("submit", async event => {
         event.preventDefault()
         const filter = newChannelFilterEl.value
         const name = newChannelNameEl.value
-        const replace = newChannelReplaceEl.value
-        const newChannel = await createChannel(name, filter, replace)
+        const subMatch = newChannelSubMatchEl.value
+        const subReplace = newChannelSubReplaceEl.value
+        const newChannel = await createChannel(name, filter, subMatch, subReplace)
         newChannelNameEl.value = ""
         newChannelFilterEl.value = ""
-        newChannelReplaceEl.value = ""
+        newChannelSubMatchEl.value = ""
+        newChannelSubReplaceEl.value = ""
         channelsEl.appendChild(await channelBox(newChannel))
     })
     const channelsEl = document.getElementById("channels")
@@ -112,7 +126,8 @@ async function channelBox(channel) {
     const nameEl = channelEl.querySelector(".name")
     const filterEl = channelEl.querySelector(".filter")
     const filterErrorEl = channelEl.querySelector(".error")
-    const replaceEl = channelEl.querySelector(".replace")
+    const subMatchEl = channelEl.querySelector(".submatch")
+    const subReplaceEl = channelEl.querySelector(".subreplace")
     const downloadEl = channelEl.querySelector(".download")
     const deleteEl = channelEl.querySelector(".delete")
     const linesEl = channelEl.querySelector(".lines")
@@ -127,10 +142,17 @@ async function channelBox(channel) {
         }
     })
 
-    replaceEl.value = channel.replace
-    replaceEl.addEventListener("keydown", async event => {
+    subMatchEl.value = channel.subMatch
+    subMatchEl.addEventListener("keydown", async event => {
         if (event.key == "Enter") {
-            await setChannelReplace(channel.id, replaceEl.value)
+            await setChannelSubMatch(channel.id, subMatchEl.value)
+        }
+    })
+
+    subReplaceEl.value = channel.subReplace
+    subReplaceEl.addEventListener("keydown", async event => {
+        if (event.key == "Enter") {
+            await setChannelSubReplace(channel.id, subReplaceEl.value)
         }
     })
 
@@ -144,7 +166,8 @@ async function channelBox(channel) {
 
     if (channel.id == "stdin") {
         filterEl.remove()
-        replaceEl.remove()
+        subReplaceEl.remove()
+        subMatchEl.remove()
     }
 
     if (channel.id == "stdin" || channel.id == "stdout") {
